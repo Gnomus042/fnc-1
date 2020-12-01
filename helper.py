@@ -13,9 +13,9 @@ nltk.download('punkt')
 nltk.download('corpora/wordnet')
 nltk.download('wordnet')
 
-lemm = True
+lemm = False
 
-examples_count = 2000
+examples_count = 4000
 
 stemmer = PorterStemmer()
 lemma = WordNetLemmatizer()
