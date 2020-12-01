@@ -10,11 +10,16 @@ from nltk.stem import PorterStemmer, WordNetLemmatizer
 
 nltk.download('stopwords')
 nltk.download('punkt')
+nltk.download('corpora/wordnet')
+nltk.download('wordnet')
+
+lemm = True
 
 examples_count = 2000
 
 stemmer = PorterStemmer()
 lemma = WordNetLemmatizer()
+lemma.lemmatize('cats')
 stop_words = set(stopwords.words('english'))
 
 
@@ -26,8 +31,10 @@ def preprocess(df, column):
     series = series.apply(lambda x: str(x).lower())
     series = series.apply(lambda x: word_tokenize(x))
     series = series.apply(lambda x: [item for item in x if item not in stop_words])
-    series = series.apply(lambda x: [stemmer.stem(item) for item in x])
-    # series = series.apply(lambda x: [lemma.lematize(word=w, pos='v') for w in x])
+    if not lemm:
+        series = series.apply(lambda x: [stemmer.stem(item) for item in x])
+    else:
+        series = series.apply(lambda x: [lemma.lemmatize(word=w, pos='v') for w in x])
     series = series.apply(lambda x: [item for item in x if len(item) > 2])
     series = series.apply(lambda x: ' '.join(x))
     df[column] = series
@@ -69,6 +76,6 @@ if __name__ == '__main__':
     stances = preprocess(train_stances, 'Headline')
     data = join_bodies(stances, bodies)
     data = pad(data)
-    data.to_csv('preprocessed_joined_data_2000.csv')
+    data.to_csv(f'preprocessed_joined_data_{"lemm" if lemm else "stem"}_{examples_count}.csv')
 
 
