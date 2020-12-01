@@ -11,6 +11,8 @@ from nltk.stem import PorterStemmer, WordNetLemmatizer
 nltk.download('stopwords')
 nltk.download('punkt')
 
+examples_count = 2000
+
 stemmer = PorterStemmer()
 lemma = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
@@ -45,13 +47,18 @@ def join_bodies(stances, bodies):
 
 def pad(data):
     c = Counter(list(data['Stance']))
-    max_exs = c[max(c)]
     for cl in set(list(data['Stance'])):
-        rows = data[data['Stance'] == cl]
-        while c[cl] < max_exs:
+        print(c)
+        if c[cl] > examples_count:
+            c[cl] = examples_count
+            index_names = data.loc[data['Stance'] == cl].index
+            data.drop(index_names[examples_count:], inplace=True)
+        while c[cl] < examples_count:
+            rows = data[data['Stance'] == cl]
             c[cl] += 1
             idx = random.randint(0, len(rows)-1)
             data = data.append(rows.iloc[idx])
+
     return data
 
 
@@ -62,6 +69,6 @@ if __name__ == '__main__':
     stances = preprocess(train_stances, 'Headline')
     data = join_bodies(stances, bodies)
     data = pad(data)
-    data.to_csv('preprocessed_joined_data.csv')
+    data.to_csv('preprocessed_joined_data_2000.csv')
 
 
