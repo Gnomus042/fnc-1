@@ -13,9 +13,9 @@ nltk.download('punkt')
 nltk.download('corpora/wordnet')
 nltk.download('wordnet')
 
-lemm = False
+lemm = True
 
-examples_count = 4000
+examples_count = 2000
 
 stemmer = PorterStemmer()
 lemma = WordNetLemmatizer()
@@ -70,12 +70,12 @@ def pad(data):
 
 
 if __name__ == '__main__':
-    train_bodies = pd.read_csv('data-orig/train_bodies.csv')
-    train_stances = pd.read_csv('data-orig/train_stances.csv')
+    train_bodies = pd.read_csv('data-orig/competition_test_bodies.csv')
+    train_stances = pd.read_csv('data-orig/competition_test_stances.csv')
     bodies = preprocess(train_bodies, 'articleBody')
     stances = preprocess(train_stances, 'Headline')
     data = join_bodies(stances, bodies)
     data = pad(data)
-    data.to_csv(f'preprocessed_joined_data_{"lemm" if lemm else "stem"}_{examples_count}.csv')
+    data.to_csv(f'preprocessed_joined_competition_test_data_{"lemm" if lemm else "stem"}_{examples_count}.csv')
 
 
