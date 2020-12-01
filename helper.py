@@ -1,0 +1,67 @@
+import pandas as pd
+import random
+from collections import Counter
+import re
+
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+
+nltk.download('stopwords')
+nltk.download('punkt')
+
+stemmer = PorterStemmer()
+lemma = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+
+def preprocess(df, column):
+    series = df[column]
+    series = series.astype('string')
+    series = series.apply(lambda x: re.sub(r'http\S+', '', x))
+    series = series.apply(lambda x: re.sub('[^a-zA-Z]', ' ', x))
+    series = series.apply(lambda x: str(x).lower())
+    series = series.apply(lambda x: word_tokenize(x))
+    series = series.apply(lambda x: [item for item in x if item not in stop_words])
+    series = series.apply(lambda x: [stemmer.stem(item) for item in x])
+    # series = series.apply(lambda x: [lemma.lematize(word=w, pos='v') for w in x])
+    series = series.apply(lambda x: [item for item in x if len(item) > 2])
+    series = series.apply(lambda x: ' '.join(x))
+    df[column] = series
+    return df
+
+
+def join_bodies(stances, bodies):
+    bodies_map = {}
+    for idx, row in bodies.iterrows():
+        bodies_map[row['Body ID']] = row['articleBody']
+    bodies_columns = []
+    for idx, row in stances.iterrows():
+        bodies_columns.append(bodies_map[row['Body ID']])
+    stances['Body'] = bodies_columns
+    return stances
+
+
+def pad(data):
+    c = Counter(list(data['Stance']))
+    max_exs = c[max(c)]
+    for cl in set(list(data['Stance'])):
+        rows = data[data['Stance'] == cl]
+        while c[cl] < max_exs:
+            c[cl] += 1
+            idx = random.randint(0, len(rows)-1)
+            data = data.append(rows.iloc[idx])
+    return data
+
+
+if __name__ == '__main__':
+    train_bodies = pd.read_csv('data-orig/train_bodies.csv')
+    train_stances = pd.read_csv('data-orig/train_stances.csv')
+    bodies = preprocess(train_bodies, 'articleBody')
+    stances = preprocess(train_stances, 'Headline')
+    data = join_bodies(stances, bodies)
+    data = pad(data)
+    data.to_csv('preprocessed_joined_data.csv')
+
+
